@@ -35,4 +35,4 @@ jobs:
             echo "✅ Existing PR updated"
           fi
         env:
-          GITHUB_TOKEN: ${{ secrets.AUTO_CREATE_PR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.FINE_GRAINED_TOKENS }}
