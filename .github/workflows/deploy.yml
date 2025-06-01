@@ -1,6 +1,5 @@
 name: Deploy to Cloudflare Workers
 
-# productionブランチへのプッシュのみでトリガー
 on:
   push:
     branches:
@@ -27,15 +26,25 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build application
+      - name: Build Next.js application
         run: npm run build
 
+      - name: Build for Cloudflare Workers
+        run: npm run deploy:build
+
+      - name: Verify build artifacts
+        run: |
+          echo "Checking Next.js build output..."
+          ls -la .next/ || echo "❌ .next directory missing"
+          echo "Checking OpenNext build output..."
+          ls -la .open-next/
+          test -f .open-next/worker.js && echo "✅ worker.js found" || echo "❌ worker.js missing"
+
       - name: Deploy to Cloudflare Workers
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: deploy
+        run: npm run deploy:only
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
       - name: Display deployment URL
         if: success()
