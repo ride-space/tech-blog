@@ -1,0 +1,38 @@
+name: Auto Create Production PR
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create or update PR
+        run: |
+          # 既存PRをチェック
+          EXISTING_PR=$(gh pr list --base production --head main --json number --jq '.[0].number // empty')
+
+          if [ -z "$EXISTING_PR" ]; then
+            # 新規PR作成
+            gh pr create \
+              --title "Deploy to Production" \
+              --body "Auto-generated PR to deploy main branch changes to production." \
+              --base production \
+              --head main
+            echo "✅ New PR created"
+          else
+            # 既存PRにコメント追加
+            gh pr comment $EXISTING_PR --body "🔄 Updated with latest changes from main"
+            echo "✅ Existing PR updated"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.FINE_GRAINED_TOKENS }}
